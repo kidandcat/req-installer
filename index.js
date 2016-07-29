@@ -5,31 +5,10 @@ var exec = require('child_process').exec;
 var installed = 0;
 
 exports.install = function() {
-    var file = fs.readFileSync(require.main.filename, "utf8");
+    _install(require.main.filename);
 
-    var aFile = file.split("\n");
-
-    aFile.forEach(function(line) {
-        if (line.indexOf('require') > -1) {
-            var pack = line.split('require')[1].split('(')[1].split(')')[0].split('\'').join('');
-            var dot = pack.charAt(0);
-            if (dot !== '.') { //local package, ignoring
-                try {
-                    require.resolve(pack);
-                } catch (e) {
-                    run('npm install ' + pack);
-                    installed++;
-                    console.log('start: ', '"' + process.argv.join('" "') + '"');
-                }
-            }
-        }
-    });
-    if (installed > 0) {
-        process.argv.shift();
-        runForever('node ' + process.argv.join('" "'));
-        process.exit();
-    }
-    Object.keys(require('module')._cache).forEach(function(file) {
+    function _install(fil) {
+        var file = fs.readFileSync(fil, "utf8");
         if (file.indexOf('node_modules') > -1) {
             return false;
         }
@@ -47,6 +26,8 @@ exports.install = function() {
                         installed++;
                         console.log('start: ', '"' + process.argv.join('" "') + '"');
                     }
+                }else{
+                  _install(pack + '.js');
                 }
             }
         });
@@ -55,7 +36,7 @@ exports.install = function() {
             runForever('node ' + process.argv.join('" "'));
             process.exit();
         }
-    });
+    }
 }
 
 function run(cmd) {
