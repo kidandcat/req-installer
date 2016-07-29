@@ -9,49 +9,76 @@ exports.install = function() {
 
     var aFile = file.split("\n");
 
-    aFile.forEach(function (line) {
-      if(line.indexOf('require') > -1){
-        var pack = line.split('require')[1].split('(')[1].split(')')[0].split('\'').join('');
-        var dot = pack.charAt(0);
-        if(dot !== '.'){  //local package, ignoring
-          try{
-            require.resolve(pack);
-          }catch(e){
-            run('npm install ' + pack);
-            installed++;
-            console.log('start: ', '"' + process.argv.join('" "') + '"');
-          }
+    aFile.forEach(function(line) {
+        if (line.indexOf('require') > -1) {
+            var pack = line.split('require')[1].split('(')[1].split(')')[0].split('\'').join('');
+            var dot = pack.charAt(0);
+            if (dot !== '.') { //local package, ignoring
+                try {
+                    require.resolve(pack);
+                } catch (e) {
+                    run('npm install ' + pack);
+                    installed++;
+                    console.log('start: ', '"' + process.argv.join('" "') + '"');
+                }
+            }
         }
-      }
     });
-    if(installed > 0){
-      process.argv.shift();
-      runForever('node ' + process.argv.join('" "'));
-      process.exit();
+    if (installed > 0) {
+        process.argv.shift();
+        runForever('node ' + process.argv.join('" "'));
+        process.exit();
     }
+    Object.keys(require('module')._cache).forEach(function(file) {
+        if (file.indexOf('node_modules') > -1) {
+            return false;
+        }
+        var aFile = file.split("\n");
+
+        aFile.forEach(function(line) {
+            if (line.indexOf('require') > -1) {
+                var pack = line.split('require')[1].split('(')[1].split(')')[0].split('\'').join('');
+                var dot = pack.charAt(0);
+                if (dot !== '.') { //local package, ignoring
+                    try {
+                        require.resolve(pack);
+                    } catch (e) {
+                        run('npm install ' + pack);
+                        installed++;
+                        console.log('start: ', '"' + process.argv.join('" "') + '"');
+                    }
+                }
+            }
+        });
+        if (installed > 0) {
+            process.argv.shift();
+            runForever('node ' + process.argv.join('" "'));
+            process.exit();
+        }
+    });
 }
 
-function run(cmd){
-  switch(process.platform){
-    case 'win32':
-        return execSync('start "New Window" cmd /c ' + cmd);
-    case 'linux':
-        break;
-    case 'darwin':
-        break;
-  }
-  console.log('PLATFORM NOT FOUND: ', process.platform);
+function run(cmd) {
+    switch (process.platform) {
+        case 'win32':
+            return execSync('start "New Window" cmd /c ' + cmd);
+        case 'linux':
+            return exec('xterm -e ' + cmd);
+        case 'darwin':
+            break;
+    }
+    console.log('PLATFORM NOT FOUND: ', process.platform);
 }
 
 
-function runForever(cmd){
-  switch(process.platform){
-    case 'win32':
-        return exec('start "New Window" cmd /k ' + cmd);
-    case 'linux':
-        return exec('gnome-terminal -c ' + cmd);
-    case 'darwin':
-        break;
-  }
-  console.log('PLATFORM NOT FOUND: ', process.platform);
+function runForever(cmd) {
+    switch (process.platform) {
+        case 'win32':
+            return exec('start "New Window" cmd /k ' + cmd);
+        case 'linux':
+            return exec('xterm -e ' + cmd);
+        case 'darwin':
+            break;
+    }
+    console.log('PLATFORM NOT FOUND: ', process.platform);
 }
