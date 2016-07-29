@@ -1,5 +1,5 @@
 # Installation
-npm install -g req-installer
+npm install req-installer
 
 # Use
 Before all 'require'
